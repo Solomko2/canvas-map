@@ -1,9 +1,9 @@
 <div class="root">
 
   <div class="container-canvas">
-    <app-floor-canvas [options]="options"></app-floor-canvas>
+    <app-floor-canvas #t [options]="options"></app-floor-canvas>
   </div>
-  <div (click)="test()" style="position: fixed; top:0; left: 0;">test</div>
+  <button type="button" (click)="changeMap();" style="position: fixed; top:0; left: 0;">button</button>
 
 
   <!--<h1>SVG</h1>-->

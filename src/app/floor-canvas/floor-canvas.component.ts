@@ -2,6 +2,7 @@ import {AfterViewInit, Component, Input, OnInit, ViewChild} from '@angular/core'
 import {IFloorCanvasOption} from '../models/IFloorCanvasOption';
 import {Observable} from 'rxjs/Observable';
 import * as Konva from 'konva';
+import * as R from 'ramda';
 
 export interface Seat {
   average_occupancy: number;
@@ -30,26 +31,38 @@ export interface Point {
   styleUrls: ['./floor-canvas.component.css']
 })
 export class FloorCanvasComponent implements OnInit, AfterViewInit {
-  @Input() options: IFloorCanvasOption;
+  @Input()
+  set options(val: IFloorCanvasOption) {
+    this._options = val;
+    this._initCanvas(this._options.points);
+  }
+
+  get options() {
+    return this._options;
+  }
+
   @ViewChild('floor') canvas: any;
 
   private stage: Konva.Stage;
   private layer: Konva.Layer;
+  private _options: IFloorCanvasOption;
 
   get height() {
-    return this.options.height;
+    return window.innerHeight;
   }
 
   private _initCanvas(seats: Seat[]) {
-    const width = this.options.width,
-      height = this.options.height;
+    this.destroy();
+
+    const width = window.innerWidth,
+      height = window.innerHeight;
 
     this.stage = new Konva.Stage({
-        container: this.canvas.nativeElement,
-        width: width,
-        height: height,
-        draggable: true
-      });
+      container: this.canvas.nativeElement,
+      width: width,
+      height: height,
+      draggable: true
+    });
 
     this.layer = new Konva.Layer();
     const imageObj = new Image();
@@ -57,7 +70,6 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
     imageObj.onload = () => {
       this.setImageToDOM(this.options.imgSrc)
         .subscribe(r => {
-
           this.addFloorToLayer({
             x: 0,
             y: 0,
@@ -81,6 +93,14 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
     imageObj.src = this.options.imgSrc;
   }
 
+  private destroy(): void {
+    if (this.stage) {
+      this.stage.clear();
+      this.stage.clearCache();
+      this.stage.destroy();
+    }
+  }
+
   private setImageToDOM(src): Observable<any> {
     return Observable.create(obs => {
       const imageOfPlan = document.createElement('img');
@@ -99,7 +119,11 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
       imageOfPlan.onload = () => obs.next(imageOfPlan);
 
       document.body.appendChild(imageOfPlan);
-      document.body.removeChild(imageOfPlan);
+
+      // IE fix
+      setTimeout(() => {
+        document.body.removeChild(imageOfPlan);
+      }, 0);
     });
   }
 
@@ -149,21 +173,28 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
       e.preventDefault();
       const oldScale = stage.scaleX();
 
+      const pointerCoord = stage.getPointerPosition();
+
+      const pointerXDefault = R.defaultTo(1);
+      const pointerYDefault = R.defaultTo(1);
+
+      const pointerX = pointerXDefault(R.prop('x', pointerCoord));
+      const pointerY = pointerYDefault(R.prop('y', pointerCoord));
+
       const mousePointTo = {
-        x: stage.getPointerPosition().x / oldScale - stage.x() / oldScale,
-        y: stage.getPointerPosition().y / oldScale - stage.y() / oldScale,
+        x: pointerX / oldScale - stage.x() / oldScale,
+        y: pointerY / oldScale - stage.y() / oldScale,
       };
 
       const newScale = e.deltaY > 0 ? oldScale * scaleBy : oldScale / scaleBy;
 
       stage.scale({x: newScale, y: newScale});
 
-
-
       const newPos = {
-        x: -(mousePointTo.x - stage.getPointerPosition().x / newScale) * newScale,
-        y: -(mousePointTo.y - stage.getPointerPosition().y / newScale) * newScale
+        x: -(mousePointTo.x - pointerX / newScale) * newScale,
+        y: -(mousePointTo.y - pointerY / newScale) * newScale
       };
+
       stage.position(newPos);
       stage.batchDraw();
     });
@@ -187,6 +218,6 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this._initCanvas(this.options.points);
+
   }
 }

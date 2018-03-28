@@ -66,6 +66,7 @@ export class FloorCanvasComponent implements OnInit {
   private centerPositionX: number;
   private centerPositionY: number;
   private zoomK: number;
+  private pointRadius: number;
 
   private _initCanvas(seats: Seat[]) {
     this.destroy();
@@ -80,6 +81,8 @@ export class FloorCanvasComponent implements OnInit {
       draggable: true
     });
 
+    this.pointRadius = 8;
+
     this.layer = new Konva.Layer();
     const imageObj = new Image();
 
@@ -92,6 +95,8 @@ export class FloorCanvasComponent implements OnInit {
           this.centerPositionX = width / 2 - this.planWidth / 2;
           this.centerPositionY = height / 2 - this.planHeight / 2;
           this.zoomK = this.planHeight / r.height;
+
+          this.pointRadius = this.planWidth < 1000 ? 4 : 8;
 
           this.addFloorToLayer({
             x: this.centerPositionX,
@@ -160,7 +165,7 @@ export class FloorCanvasComponent implements OnInit {
       const newCircle = this.createNewSeats({
         x: (layerX - (stageX)) / scaleX,
         y: (layerY - (stageY)) / scaleY,
-        radius: 8,
+        radius: this.pointRadius,
         fill: 'blue',
         stroke: 'blue',
         strokeWidth: 0,
@@ -178,7 +183,7 @@ export class FloorCanvasComponent implements OnInit {
       const circle = this.createNewSeats({
         x: this.fixPositionX(item.seat_coordinate.x),
         y: this.fixPositionY(item.seat_coordinate.y),
-        radius: 8,
+        radius: this.pointRadius,
         fill: 'red',
         stroke: 'red',
         strokeWidth: 0,

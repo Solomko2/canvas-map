@@ -25,6 +25,21 @@ export interface Point {
   draggable: boolean;
 }
 
+const debounce = (func, wait, immediate?) => {
+  let timeout;
+  return function() {
+    const context = this, args = arguments;
+    const later = function() {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    const callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  };
+};
+
 @Component({
   selector: 'app-floor-canvas',
   templateUrl: './floor-canvas.component.html',
@@ -55,8 +70,8 @@ export class FloorCanvasComponent implements OnInit {
   private _initCanvas(seats: Seat[]) {
     this.destroy();
 
-    const width = this.options.width || window.innerWidth,
-      height = this.options.height || window.innerHeight;
+    const width = window.innerWidth,
+      height = window.innerHeight;
 
     this.stage = new Konva.Stage({
       container: this.canvas.nativeElement,
@@ -231,5 +246,10 @@ export class FloorCanvasComponent implements OnInit {
   }
 
   ngOnInit() {
+    const redrawFloor = debounce(() => {
+      this._initCanvas(this.options.points);
+    }, 250);
+
+    window.addEventListener('resize', redrawFloor);
   }
 }

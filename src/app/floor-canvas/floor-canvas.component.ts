@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, Input, OnInit, ViewChild} from '@angular/core';
 import {IFloorCanvasOption} from '../models/IFloorCanvasOption';
-import * as Konva from 'konva';
 import {Observable} from 'rxjs/Observable';
+import * as Konva from 'konva';
 
 export interface Seat {
   average_occupancy: number;
@@ -36,11 +36,15 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
   private stage: Konva.Stage;
   private layer: Konva.Layer;
 
+  get height() {
+    return this.options.height;
+  }
+
   private _initCanvas(seats: Seat[]) {
     const width = this.options.width,
       height = this.options.height;
 
-      this.stage = new Konva.Stage({
+    this.stage = new Konva.Stage({
         container: this.canvas.nativeElement,
         width: width,
         height: height,
@@ -103,14 +107,15 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
     const floor = new Konva.Image(floorOptions);
 
     floor.on('click', (e) => {
-      const {x, y} = e.evt;
+      const {layerX, layerY} = e.evt;
+      const {x: stageX, y: stageY, scaleX, scaleY} = this.stage.getAttrs();
 
       const newCircle = this.createNewSeats({
-        x: x - 8,
-        y: y - 8,
+        x: (layerX - (stageX)) / scaleX,
+        y: (layerY - (stageY)) / scaleY,
         radius: 8,
-        fill: 'red',
-        stroke: 'red',
+        fill: 'blue',
+        stroke: 'blue',
         strokeWidth: 0,
         draggable: true
       });
@@ -139,6 +144,7 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
 
   private addZoomToStage(stage) {
     const scaleBy = 1.1;
+
     this.canvas.nativeElement.addEventListener('wheel', (e) => {
       e.preventDefault();
       const oldScale = stage.scaleX();
@@ -149,7 +155,9 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
       };
 
       const newScale = e.deltaY > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
       stage.scale({x: newScale, y: newScale});
+
 
 
       const newPos = {

@@ -11,16 +11,17 @@ export class AppComponent {
   public seats: any[];
 
   constructor() {
+    console.log(window.innerHeight);
     this.options = {
       width: window.innerWidth,
       height: window.innerHeight,
       imgSrc: '/assets/img/3_floor.svg',
       points: [
         {
-          'average_occupancy': 12,
+          'average_occupancy': 17,
           'seat_name': '5-18',
           'id': '5a07775f4a5d280d601ad52b',
-          'seat_coordinate': {'x': '901.0253295898438', 'y': '615.3426971435547'},
+          'seat_coordinate': {'x': '1125', 'y': '430'},
           'plugwise_id': 8879
         },
         {
@@ -1053,5 +1054,8 @@ export class AppComponent {
       }
     };
     this.seats = res.data.seats;
+  }
+
+  test() {
   }
 }

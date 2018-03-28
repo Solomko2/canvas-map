@@ -46,7 +46,11 @@ export class FloorCanvasComponent implements OnInit {
   private stage: Konva.Stage;
   private layer: Konva.Layer;
   private _options: IFloorCanvasOption;
+  private planWidth: number;
+  private planHeight: number;
   private centerPositionX: number;
+  private centerPositionY: number;
+  private zoomK: number;
 
   private _initCanvas(seats: Seat[]) {
     this.destroy();
@@ -67,14 +71,19 @@ export class FloorCanvasComponent implements OnInit {
     imageObj.onload = () => {
       this.setImageToDOM(this.options.imgSrc)
         .subscribe(r => {
-          this.centerPositionX = width / 2 - r.width / 2;
+          const k = r.width / r.height;
+          this.planWidth = k * height;
+          this.planHeight = height;
+          this.centerPositionX = width / 2 - this.planWidth / 2;
+          this.centerPositionY = height / 2 - this.planHeight / 2;
+          this.zoomK = this.planHeight / r.height;
 
           this.addFloorToLayer({
             x: this.centerPositionX,
             y: 0,
             image: imageObj,
-            width: r.width,
-            height: r.height
+            width: this.planWidth,
+            height: this.planHeight
           });
 
           // add seats
@@ -98,10 +107,6 @@ export class FloorCanvasComponent implements OnInit {
       this.stage.clearCache();
       this.stage.destroy();
     }
-  }
-
-  private toCenterX(val: number | string): number {
-    return (+val) + this.centerPositionX;
   }
 
   private setImageToDOM(src): Observable<any> {
@@ -156,8 +161,8 @@ export class FloorCanvasComponent implements OnInit {
   private addSeatsToLayer(seats: Seat[]) {
     seats.map((item: Seat) => {
       const circle = this.createNewSeats({
-        x: this.toCenterX(item.seat_coordinate.x),
-        y: (+item.seat_coordinate.y),
+        x: this.fixPositionX(item.seat_coordinate.x),
+        y: this.fixPositionY(item.seat_coordinate.y),
         radius: 8,
         fill: 'red',
         stroke: 'red',
@@ -212,6 +217,14 @@ export class FloorCanvasComponent implements OnInit {
       console.log(point);
     });
     return circle;
+  }
+
+  // HELPERS
+  private fixPositionX(val: number | string): number {
+    return ((+val) * this.zoomK) + this.centerPositionX;
+  }
+  private fixPositionY(val: number | string): number {
+    return ((+val) * this.zoomK) + this.centerPositionY;
   }
 
   constructor() {

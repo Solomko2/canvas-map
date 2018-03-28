@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, Input, OnInit, ViewChild} from '@angular/core';
+import {Component, Input, OnInit, ViewChild} from '@angular/core';
 import {IFloorCanvasOption} from '../models/IFloorCanvasOption';
 import {Observable} from 'rxjs/Observable';
 import * as Konva from 'konva';
@@ -30,7 +30,7 @@ export interface Point {
   templateUrl: './floor-canvas.component.html',
   styleUrls: ['./floor-canvas.component.css']
 })
-export class FloorCanvasComponent implements OnInit, AfterViewInit {
+export class FloorCanvasComponent implements OnInit {
   @Input()
   set options(val: IFloorCanvasOption) {
     this._options = val;
@@ -46,16 +46,13 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
   private stage: Konva.Stage;
   private layer: Konva.Layer;
   private _options: IFloorCanvasOption;
-
-  get height() {
-    return window.innerHeight;
-  }
+  private centerPositionX: number;
 
   private _initCanvas(seats: Seat[]) {
     this.destroy();
 
-    const width = window.innerWidth,
-      height = window.innerHeight;
+    const width = this.options.width || window.innerWidth,
+      height = this.options.height || window.innerHeight;
 
     this.stage = new Konva.Stage({
       container: this.canvas.nativeElement,
@@ -70,8 +67,10 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
     imageObj.onload = () => {
       this.setImageToDOM(this.options.imgSrc)
         .subscribe(r => {
+          this.centerPositionX = width / 2 - r.width / 2;
+
           this.addFloorToLayer({
-            x: 0,
+            x: this.centerPositionX,
             y: 0,
             image: imageObj,
             width: r.width,
@@ -101,6 +100,10 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
     }
   }
 
+  private toCenterX(val: number | string): number {
+    return (+val) + this.centerPositionX;
+  }
+
   private setImageToDOM(src): Observable<any> {
     return Observable.create(obs => {
       const imageOfPlan = document.createElement('img');
@@ -123,7 +126,7 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
       // IE fix
       setTimeout(() => {
         document.body.removeChild(imageOfPlan);
-      }, 0);
+      }, 100);
     });
   }
 
@@ -153,7 +156,7 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
   private addSeatsToLayer(seats: Seat[]) {
     seats.map((item: Seat) => {
       const circle = this.createNewSeats({
-        x: (+item.seat_coordinate.x),
+        x: this.toCenterX(item.seat_coordinate.x),
         y: (+item.seat_coordinate.y),
         radius: 8,
         fill: 'red',
@@ -215,9 +218,5 @@ export class FloorCanvasComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-  }
-
-  ngAfterViewInit() {
-
   }
 }

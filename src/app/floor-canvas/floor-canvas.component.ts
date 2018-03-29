@@ -73,13 +73,12 @@ export class FloorCanvasComponent implements OnInit {
   private _initCanvas(seats: Seat[]) {
     this.destroy();
 
-    const width = window.innerWidth,
-      height = window.innerHeight;
+    const width = window.innerWidth, height = window.innerHeight;
 
     this.stage = new Konva.Stage({
       container: this.canvas.nativeElement,
-      width: width,
-      height: height,
+      width: window.innerWidth,
+      height: window.innerHeight,
       draggable: true
     });
 
@@ -88,11 +87,27 @@ export class FloorCanvasComponent implements OnInit {
     const imageObj = new Image();
 
     imageObj.onload = () => {
+
       this.setImageToDOM(this.options.imgSrc)
         .subscribe(r => {
+          const maxScreen = 1980;
           const k = r.width / r.height;
-          this.planWidth = k * height;
-          this.planHeight = height;
+
+          let calcHeight = height > r.height ? r.height : height;
+
+          if (r.width > r.height) {
+            if (r.width > maxScreen) {
+              calcHeight *= maxScreen / r.width;
+            }
+          } else {
+            if (r.height > maxScreen) {
+              calcHeight = maxScreen;
+            }
+          }
+
+
+          this.planWidth = k * calcHeight;
+          this.planHeight = calcHeight;
           this.centerPositionX = width / 2 - this.planWidth / 2;
           this.centerPositionY = height / 2 - this.planHeight / 2;
           this.zoomK = this.planHeight / r.height;
@@ -101,7 +116,7 @@ export class FloorCanvasComponent implements OnInit {
 
           this.addFloorToLayer({
             x: this.centerPositionX,
-            y: 0,
+            y: this.centerPositionY,
             image: imageObj,
             width: this.planWidth,
             height: this.planHeight

@@ -27,6 +27,7 @@
     "konva": "^1.7.6",
     "ramda": "^0.25.0",
     "rxjs": "^5.5.2",
+    "wheel-inertia": "0.0.2",
     "zone.js": "^0.8.14"
   },
   "devDependencies": {

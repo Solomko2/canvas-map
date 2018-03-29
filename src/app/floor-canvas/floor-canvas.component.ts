@@ -27,9 +27,9 @@ export interface Point {
 
 const debounce = (func, wait, immediate?) => {
   let timeout;
-  return function() {
+  return function () {
     const context = this, args = arguments;
-    const later = function() {
+    const later = function () {
       timeout = null;
       if (!immediate) func.apply(context, args);
     };
@@ -46,6 +46,8 @@ const debounce = (func, wait, immediate?) => {
   styleUrls: ['./floor-canvas.component.css']
 })
 export class FloorCanvasComponent implements OnInit {
+  @Input() colorPoint: string;
+
   @Input()
   set options(val: IFloorCanvasOption) {
     this._options = val;
@@ -82,7 +84,6 @@ export class FloorCanvasComponent implements OnInit {
     });
 
     this.pointRadius = 8;
-
     this.layer = new Konva.Layer();
     const imageObj = new Image();
 
@@ -166,8 +167,8 @@ export class FloorCanvasComponent implements OnInit {
         x: (layerX - (stageX)) / scaleX,
         y: (layerY - (stageY)) / scaleY,
         radius: this.pointRadius,
-        fill: 'blue',
-        stroke: 'blue',
+        fill: this.colorPoint,
+        stroke: this.colorPoint,
         strokeWidth: 0,
         draggable: true
       });
@@ -184,8 +185,8 @@ export class FloorCanvasComponent implements OnInit {
         x: this.fixPositionX(item.seat_coordinate.x),
         y: this.fixPositionY(item.seat_coordinate.y),
         radius: this.pointRadius,
-        fill: 'red',
-        stroke: 'red',
+        fill: this.colorPoint,
+        stroke: this.colorPoint,
         strokeWidth: 0,
         draggable: true
       });
@@ -214,8 +215,12 @@ export class FloorCanvasComponent implements OnInit {
         y: pointerY / oldScale - stage.y() / oldScale,
       };
 
-      const newScale = e.deltaY > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+      const delta = e.wheelDelta ? e.wheelDelta / 40 : e.detail ? -e.detail : 0;
+      const newScale = delta > 0 ? oldScale * scaleBy : oldScale / scaleBy;
 
+
+      if (newScale > 2 || newScale < .5)
+        return;
       stage.scale({x: newScale, y: newScale});
 
       const newPos = {
@@ -243,6 +248,7 @@ export class FloorCanvasComponent implements OnInit {
   private fixPositionX(val: number | string): number {
     return ((+val) * this.zoomK) + this.centerPositionX;
   }
+
   private fixPositionY(val: number | string): number {
     return ((+val) * this.zoomK) + this.centerPositionY;
   }

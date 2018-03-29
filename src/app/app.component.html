@@ -1,9 +1,13 @@
 <div class="root">
+  <div style="position: fixed; top:0; left: 0; z-index: 9999">
+    <button type="button" (click)="changeMap();">map 1</button>
+    <button type="button" (click)="changeMap2();">map 2</button>
+  </div>
 
   <div class="container-canvas">
-    <app-floor-canvas #t [options]="options"></app-floor-canvas>
+    <app-floor-canvas [options]="options"
+                      colorPoint="cornflowerblue"></app-floor-canvas>
   </div>
-  <button type="button" (click)="changeMap();" style="position: fixed; top:0; left: 0;">button</button>
 
 
   <!--<h1>SVG</h1>-->
